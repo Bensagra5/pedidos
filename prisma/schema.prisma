@@ -10,3 +10,62 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        Int        @id @default(autoincrement())
+  email     String     @unique
+  phone     String?
+  name      String
+  password  String
+  orders    Order[]    // One-to-many relationship with Order
+  locations UserLocation[] // Many-to-many relationship through UserLocation
+
+  @@map("users") // Optional: database table name
+}
+
+model Location {
+  id        Int            @id @default(autoincrement())
+  address   String
+  email     String         @unique
+  phone     String?
+  users     UserLocation[] // Many-to-many relationship through UserLocation
+  orders    Order[]        // One-to-many relationship with Order
+
+  @@map("locations")
+}
+
+model Order {
+  id          Int       @id @default(autoincrement())
+  orderNumber Int       @unique // Represents "NoPedido"
+  userId      Int
+  locationId  Int
+
+  user        User      @relation(fields: [userId], references: [id]) // Many-to-one relationship with User
+  location    Location  @relation(fields: [locationId], references: [id]) // Many-to-one relationship with Location
+  meals       Meal[]    // One-to-many relationship with Meal
+
+  @@map("orders")
+}
+
+model Meal {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+
+  orderId     Int
+  order       Order    @relation(fields: [orderId], references: [id]) // Many-to-one relationship with Order
+
+  @@map("meals")
+}
+
+model UserLocation {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  locationId  Int
+
+  user        User      @relation(fields: [userId], references: [id]) // Many-to-one relationship with User
+  location    Location  @relation(fields: [locationId], references: [id]) // Many-to-one relationship with Location
+
+  @@unique([userId, locationId]) // Ensures that the same user cannot be associated with the same location multiple times
+  @@map("user_locations") // Optional: database table name
+}
+
